@@ -1,0 +1,145 @@
+<div class="app-shell">
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="SENATI TaskHub, inicio">
+      <span class="brand-mark" aria-hidden="true">S</span>
+      <span class="brand-copy">
+        <strong>SENATI TaskHub PWA</strong>
+        <small>{{ rol === 'estudiante' ? 'Estudiante' : 'Instructor' }} · {{ online ? 'Online' : 'Offline' }}</small>
+      </span>
+    </a>
+    <button class="role-switch" type="button" (click)="alternarRol()" [attr.aria-label]="'Cambiar a vista de ' + (rol === 'estudiante' ? 'instructor' : 'estudiante')">
+      <span>{{ rol === 'estudiante' ? 'AL' : 'IN' }}</span>
+      <small>{{ rol === 'estudiante' ? 'Estudiante' : 'Instructor' }} <b aria-hidden="true">↻</b></small>
+    </button>
+  </header>
+
+  <main class="page-content">
+    <div class="connection-badge" [class.offline]="!online" role="status">
+      <span>Estado:</span><span class="connection-dot"></span>
+      <strong>{{ online ? 'CONECTADO' : 'SIN CONEXIÓN - Modo Local' }}</strong>
+    </div>
+
+    <div *ngIf="mensaje" class="notice" [class.success]="tipoMensaje === 'success'" [class.warning]="tipoMensaje === 'warning'" [class.error]="tipoMensaje === 'error'" role="status">
+      <span class="notice-icon" aria-hidden="true">{{ tipoMensaje === 'success' ? '✓' : tipoMensaje === 'warning' ? '!' : '×' }}</span>
+      <span>{{ mensaje }}</span>
+      <button type="button" aria-label="Cerrar mensaje" (click)="mensaje = ''; tipoMensaje = ''">×</button>
+    </div>
+
+    <ng-container [ngSwitch]="vistaActiva">
+      <section *ngSwitchCase="'tareas'" class="task-layout">
+        <div class="task-column">
+          <div class="section-heading">
+            <h2>{{ rol === 'estudiante' ? 'Tareas Asignadas' : 'Mis Cursos y Tareas Asignadas' }}</h2>
+            <span class="task-count">{{ rol === 'estudiante' ? tareasEstudiante.length + ' tareas' : cursosInstructor.length + ' cursos' }}</span>
+          </div>
+
+          <div *ngIf="cargandoTareas" class="loading-card"><span class="spinner"></span> Cargando tareas...</div>
+          <div *ngIf="!cargandoTareas && tareas.length === 0" class="empty-state">
+            <span class="empty-icon">✓</span><strong>No hay tareas disponibles</strong>
+          </div>
+
+          <ng-container *ngIf="rol === 'estudiante'; else instructorTasks">
+            <button
+              *ngFor="let tarea of tareasEstudiante"
+              type="button"
+              class="task-card"
+              [class.selected]="tareaSeleccionadaId === tarea.id"
+              (click)="tareaSeleccionadaId = tarea.id">
+              <span class="task-leading-icon" aria-hidden="true">▤</span>
+              <span class="task-main">
+                <strong>{{ tarea.titulo }}</strong>
+                <span class="task-date"><span aria-hidden="true">▢</span> {{ formatearFecha(tarea.fechaEntrega) }} · ◷ 5 minutos</span>
+              </span>
+              <span class="task-chevron" aria-hidden="true">›</span>
+            </button>
+          </ng-container>
+          <ng-template #instructorTasks>
+            <button
+              *ngFor="let curso of cursosInstructor"
+              type="button"
+              class="task-card instructor-task"
+              [class.selected]="cursoSeleccionado === curso.nombre"
+              (click)="cursoSeleccionado = curso.nombre">
+              <span class="instructor-course-icon" aria-hidden="true">{{ curso.nombre === 'Software PWA' ? '▱' : curso.nombre === 'Base de Datos Avanzada' ? '▤' : '▧' }}</span>
+              <strong>{{ curso.nombre }}</strong>
+              <span class="pending-count" [class.rose]="curso.nombre === 'Desarrollo PWA'">Pendiente ({{ curso.pendientes }})</span>
+            </button>
+          </ng-template>
+
+          <div *ngIf="rol === 'estudiante'" class="offline-tip">
+            <span class="tip-icon" aria-hidden="true">⌁</span>
+            <span>Tus tareas siguen disponibles incluso sin conexión.</span>
+          </div>
+        </div>
+
+        <aside class="submission-card">
+          <h2>{{ rol === 'estudiante' ? 'Registrar Entrega / Avance' : 'Registrar Observación / Tarea Local' }}</h2>
+          <form (ngSubmit)="enviarEntrega()">
+            <ng-container *ngIf="rol === 'estudiante'; else instructorForm">
+              <label class="visually-hidden" for="task-select">Selecciona una tarea</label>
+              <select id="task-select" name="tarea" [(ngModel)]="tareaSeleccionadaId" required>
+                <option [ngValue]="null" disabled>Selecciona una tarea...</option>
+                <option *ngFor="let tarea of tareasEstudiante" [ngValue]="tarea.id">{{ tarea.titulo }}</option>
+              </select>
+
+              <label class="visually-hidden" for="comment">Comentario de avance</label>
+              <textarea id="comment" name="comentario" [(ngModel)]="comentario" rows="5" placeholder="Escriba su avance o comentario..."></textarea>
+
+              <label class="upload-zone" for="attachment">
+                <input #attachmentInput id="attachment" type="file" (change)="seleccionarArchivo($event)">
+                <span class="upload-icon" aria-hidden="true">↑</span>
+                <span><strong>{{ archivoNombre || 'Adjuntar archivo (opcional)' }}</strong><small>{{ archivoNombre ? 'Archivo listo para enviar' : 'PDF, DOCX, XLSX o imagen' }}</small></span>
+              </label>
+            </ng-container>
+            <ng-template #instructorForm>
+              <label class="visually-hidden" for="course-select">Curso</label>
+              <select id="course-select" name="curso" [(ngModel)]="cursoSeleccionado" required>
+                <option value="" disabled>Curso</option>
+                <option *ngFor="let curso of cursosInstructor" [value]="curso.nombre">{{ curso.nombre }}</option>
+              </select>
+
+              <label class="visually-hidden" for="task-title">Nombre de tarea</label>
+              <input id="task-title" name="tituloObservacion" [(ngModel)]="tituloObservacion" placeholder="Nombre de tarea" required>
+
+              <label class="visually-hidden" for="observaciones">Observaciones</label>
+              <textarea id="observaciones" name="observaciones" [(ngModel)]="comentario" rows="3" placeholder="Observaciones" required></textarea>
+            </ng-template>
+
+            <button class="submit-button" [class.offline-button]="!online || rol === 'instructor'" type="submit" [disabled]="guardando || (rol === 'estudiante' && tareasEstudiante.length === 0)">
+              <span aria-hidden="true">{{ online && rol === 'estudiante' ? '↥' : '⌑' }}</span>
+              {{ guardando ? 'GUARDANDO...' : rol === 'instructor' || !online ? '[ GUARDAR EN DISPOSITIVO ]' : '[ GUARDAR / ENVIAR ENTREGA ]' }}
+            </button>
+            <p class="form-footnote">
+              {{ rol === 'instructor' ? 'Sus cambios se sincronizarán al recuperar conexión' : online ? 'Tu instructor recibirá tu entrega al instante.' : 'La entrega se guardará localmente en este dispositivo.' }}
+            </p>
+          </form>
+        </aside>
+      </section>
+
+      <section *ngSwitchCase="'entregas'" class="secondary-view">
+        <div class="section-heading"><h2>Entregas guardadas en este dispositivo</h2><span class="task-count">{{ entregas.length }} pendientes</span></div>
+        <article *ngFor="let entrega of entregas" class="saved-delivery">
+          <span class="task-leading-icon" aria-hidden="true">↥</span>
+          <div class="delivery-copy"><span class="task-course">{{ entrega.curso }}</span><strong>{{ entrega.tituloTarea }}</strong><span>{{ entrega.comentario || entrega.archivoNombre || 'Sin comentario adjunto' }}</span></div>
+          <span class="pending-label">PENDIENTE</span>
+        </article>
+        <div *ngIf="entregas.length === 0" class="empty-state"><span class="empty-icon">↥</span><strong>Aún no tienes entregas pendientes</strong></div>
+      </section>
+
+      <section *ngSwitchCase="'perfil'" class="secondary-view profile-panel">
+        <span class="large-avatar">{{ rol === 'estudiante' ? 'AL' : 'IN' }}</span><div><p class="eyebrow">PERFIL {{ rol === 'estudiante' ? 'DEL ESTUDIANTE' : 'DEL INSTRUCTOR' }}</p><h2>{{ rol === 'estudiante' ? 'Alex López' : 'Instructor SENATI' }}</h2><p>{{ rol === 'estudiante' ? 'Estudiante' : 'Instructor' }} · Campus Virtual SENATI</p></div>
+      </section>
+
+      <section *ngSwitchCase="'ajustes'" class="secondary-view settings-panel">
+        <p class="eyebrow">PREFERENCIAS</p><h2>Modo de conexión</h2><p>Las tareas permanecen disponibles y las observaciones se guardan localmente cuando no hay conexión.</p>
+      </section>
+    </ng-container>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Navegación principal">
+    <button type="button" [class.active]="vistaActiva === 'tareas'" (click)="seleccionarVista('tareas')"><span aria-hidden="true">▤</span><small>Tareas</small></button>
+    <button type="button" [class.active]="vistaActiva === 'entregas'" (click)="seleccionarVista('entregas')"><span aria-hidden="true">☑</span><small>Entregas</small><i *ngIf="entregas.length > 0">{{ entregas.length }}</i></button>
+    <button type="button" [class.active]="vistaActiva === 'perfil'" (click)="seleccionarVista('perfil')"><span aria-hidden="true">●</span><small>Perfil</small></button>
+    <button type="button" [class.active]="vistaActiva === 'ajustes'" (click)="seleccionarVista('ajustes')"><span aria-hidden="true">⚙</span><small>Ajustes</small></button>
+  </nav>
+</div>

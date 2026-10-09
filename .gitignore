@@ -1,0 +1,18 @@
+# Angular build output and local CLI cache
+/dist/
+/.angular/
+
+# Installed dependencies
+/node_modules/
+
+# Local editor and operating-system files
+/.vscode/
+.DS_Store
+Thumbs.db
+
+# Local environment files and private keys
+.env
+.env.*
+!.env.example
+*.pem
+*.key

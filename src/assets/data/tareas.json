@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "curso": "Desarrollo PWA",
+    "titulo": "Desarrollo PWA",
+    "instructor": "Ing. Valeria Torres",
+    "fechaEntrega": "2026-10-15",
+    "estado": "Pendiente"
+  },
+  {
+    "id": 2,
+    "curso": "Base de Datos Avanzada",
+    "titulo": "Base de Datos Avanzada",
+    "instructor": "Mg. Carlos Mendoza",
+    "fechaEntrega": "2026-10-18",
+    "estado": "En progreso"
+  },
+  {
+    "id": 3,
+    "curso": "Inteligencia Artificial",
+    "titulo": "IA Aplicada",
+    "instructor": "Lic. Andrea Salazar",
+    "fechaEntrega": "2026-10-22",
+    "estado": "Pendiente"
+  }
+]
