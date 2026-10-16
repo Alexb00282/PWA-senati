@@ -44,6 +44,15 @@
 .section-heading { display: flex; min-height: 36px; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 11px 3px; }
 .section-heading h2, .submission-card > h2 { margin: 0; color: #1e232a; font: 700 14px Arial, sans-serif; }
 .task-count { color: #738096; font-size: 9px; }
+.task-filters { display: flex; flex-direction: column; gap: 8px; padding: 0 11px 11px; }
+.task-filters input,
+.task-filters select,
+.filter-row .filter-clear { min-height: 32px; border: 1px solid #d9dde2; border-radius: 6px; font-size: 11px; }
+.task-filters input,
+.task-filters select { width: 100%; padding: 0 10px; background: #fff; color: #2b2f36; }
+.filter-row { display: flex; gap: 8px; }
+.filter-row select { flex: 1; }
+.filter-clear { padding: 0 10px; border: 1px solid #d5dfe9; background: #eef5ff; color: #1c4a9a; cursor: pointer; }
 .task-card { display: flex; width: calc(100% - 22px); min-height: 49px; align-items: center; gap: 9px; margin: 0 11px; padding: 6px 0; border: 0; border-bottom: 1px solid #e7e8e9; text-align: left; background: #fff; cursor: pointer; }
 .task-card:last-child { border-bottom: 0; }
 .task-leading-icon, .instructor-course-icon { display: grid; place-items: center; flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%; color: #fff; background: #0b439e; font-size: 17px; }
@@ -98,7 +107,12 @@ select:invalid, input::placeholder, textarea::placeholder { color: #888; }
 .delivery-copy strong, .delivery-copy > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .delivery-copy strong { font-size: 11px; }
 .delivery-copy > span:last-child, .task-course { color: #7b879b; font-size: 9px; }
+.delivery-copy small { color: #8b96a7; font-size: 9px; }
+.delivery-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
 .pending-label { padding: 5px; border-radius: 6px; color: #a36511; background: #fff5df; font-size: 8px; font-weight: 700; }
+.pending-label.success { color: #1d6a4d; background: #e7faf0; }
+.pending-label.error { color: #a63c3c; background: #ffebeb; }
+.delete-button { border: 1px solid #d7dfe8; border-radius: 6px; padding: 5px 8px; color: #7f2d2d; background: #fff1f1; font-size: 9px; cursor: pointer; }
 .profile-panel { display: flex; align-items: center; gap: 13px; }
 .profile-panel .large-avatar { display: grid; width: 48px; height: 48px; place-items: center; border-radius: 50%; color: #0033a0; background: #e5edff; font-weight: 700; }
 .profile-panel .eyebrow { margin-bottom: 5px; color: #58729e; font-size: 9px; }

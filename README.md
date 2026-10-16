@@ -1,31 +1,38 @@
 # SENATI TaskHub PWA
 
-Progressive Web App built with Angular 19 for managing student tasks and instructor observations, including offline-first local storage.
+Aplicación PWA con Angular 19 para gestionar tareas académicas, observaciones del instructor y entregas locales pendientes, con prioridad de funcionamiento offline y control honesto de sincronización.
 
-## Requirements
+## Requisitos
 
-- Node.js compatible with Angular 19
+- Node.js compatible con Angular 19
 - npm
 
-## Run locally
+## Ejecución local
 
 ```bash
 npm install
 npm start
 ```
 
-Open `http://localhost:4200/`. Use the profile control in the header to switch between the student and instructor views. The browser connection state switches the application between online and local modes.
+Abre `http://localhost:4200/`.
 
-## Production build
+## Mejoras implementadas
+
+- Búsqueda por título o por curso con filtro combinable.
+- Validación del formulario antes de guardar entregas.
+- Bandeja local de entregas con contador, estados, detalle y eliminación confirmada.
+- Indicador de conexión y mensajes transparentes: si no hay API real, la entrega queda en `PENDIENTE` y no se marca como sincronizada.
+- Persistencia en IndexedDB con soporte para estados `PENDIENTE`, `SINCRONIZADO` y `ERROR`.
+- Carga de tareas optimizada mediante filtros derivados y conteos directos evitando recorrer listas innecesarias.
+
+## Compilación de producción
 
 ```bash
 npm run build
 ```
 
-The production build generates the Angular service worker and its precache configuration. Serve the output over HTTPS (or localhost) to enable PWA and offline features.
+## Comportamiento offline
 
-## Offline behavior
-
-- Tasks are loaded from `src/assets/data/tareas.json` and cached by the Angular service worker.
-- Pending submissions and instructor observations are stored in IndexedDB (`senatiTaskDB`, `entregas_pendientes`).
-- Online submission currently shows the requested success state; connect a Campus Virtual API endpoint to transmit submissions to a server.
+- Las tareas se cargan desde `src/assets/data/tareas.json`.
+- Las entregas y observaciones se guardan en IndexedDB (`senatiTaskDB`, `entregas_pendientes`).
+- Mientras no exista un endpoint real, el sistema usa estado local y deja la entrega en `PENDIENTE` para evitar mensajes engañosos sobre sincronización.

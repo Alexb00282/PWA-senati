@@ -1,4 +1,6 @@
+<!-- Contenedor general de toda la aplicación -->
 <div class="app-shell">
+  <!-- Header principal con marca, rol y estado de conexión -->
   <header class="topbar">
     <a class="brand" href="./" aria-label="SENATI TaskHub, inicio">
       <span class="brand-mark" aria-hidden="true">S</span>
@@ -13,7 +15,9 @@
     </button>
   </header>
 
+  <!-- Contenido principal de la pantalla -->
   <main class="page-content">
+    <!-- Muestra si la app está online o offline -->
     <div class="connection-badge" [class.offline]="!online" role="status">
       <span>Estado:</span><span class="connection-dot"></span>
       <strong>{{ online ? 'CONECTADO' : 'SIN CONEXIÓN - Modo Local' }}</strong>
@@ -26,11 +30,30 @@
     </div>
 
     <ng-container [ngSwitch]="vistaActiva">
+      <!-- Vista principal de tareas y formulario -->
       <section *ngSwitchCase="'tareas'" class="task-layout">
         <div class="task-column">
+          <!-- Encabezado de la lista de tareas -->
           <div class="section-heading">
             <h2>{{ rol === 'estudiante' ? 'Tareas Asignadas' : 'Mis Cursos y Tareas Asignadas' }}</h2>
             <span class="task-count">{{ rol === 'estudiante' ? tareasEstudiante.length + ' tareas' : cursosInstructor.length + ' cursos' }}</span>
+          </div>
+
+          <!-- Filtros para buscar tareas por texto y curso -->
+          <div *ngIf="rol === 'estudiante'" class="task-filters">
+            <input
+              type="search"
+              [(ngModel)]="busquedaTarea"
+              placeholder="Buscar por título o curso"
+              aria-label="Buscar tareas"
+            >
+            <div class="filter-row">
+              <select [(ngModel)]="cursoFiltro" aria-label="Filtrar por curso">
+                <option value="todos">Todos los cursos</option>
+                <option *ngFor="let curso of cursosDisponibles" [value]="curso">{{ curso }}</option>
+              </select>
+              <button type="button" class="filter-clear" (click)="limpiarFiltros()">Limpiar</button>
+            </div>
           </div>
 
           <div *ngIf="cargandoTareas" class="loading-card"><span class="spinner"></span> Cargando tareas...</div>
@@ -38,7 +61,12 @@
             <span class="empty-icon">✓</span><strong>No hay tareas disponibles</strong>
           </div>
 
+          <!-- Lista de tareas visibles según el filtro aplicado -->
           <ng-container *ngIf="rol === 'estudiante'; else instructorTasks">
+            <div *ngIf="!cargandoTareas && tareasEstudiante.length === 0" class="empty-state">
+              <span class="empty-icon">⌕</span><strong>No se encontraron tareas con esos filtros</strong>
+            </div>
+
             <button
               *ngFor="let tarea of tareasEstudiante"
               type="button"
@@ -48,7 +76,7 @@
               <span class="task-leading-icon" aria-hidden="true">▤</span>
               <span class="task-main">
                 <strong>{{ tarea.titulo }}</strong>
-                <span class="task-date"><span aria-hidden="true">▢</span> {{ formatearFecha(tarea.fechaEntrega) }} · ◷ 5 minutos</span>
+                <span class="task-date"><span aria-hidden="true">▢</span> {{ tarea.curso }} · {{ formatearFecha(tarea.fechaEntrega) }}</span>
               </span>
               <span class="task-chevron" aria-hidden="true">›</span>
             </button>
@@ -68,10 +96,11 @@
 
           <div *ngIf="rol === 'estudiante'" class="offline-tip">
             <span class="tip-icon" aria-hidden="true">⌁</span>
-            <span>Tus tareas siguen disponibles incluso sin conexión.</span>
+            <span>Las tareas siguen disponibles y la entrega se conserva localmente si hay pérdida de conexión.</span>
           </div>
         </div>
 
+        <!-- Formulario para registrar entregas o observaciones -->
         <aside class="submission-card">
           <h2>{{ rol === 'estudiante' ? 'Registrar Entrega / Avance' : 'Registrar Observación / Tarea Local' }}</h2>
           <form (ngSubmit)="enviarEntrega()">
@@ -116,18 +145,37 @@
         </aside>
       </section>
 
+      <!-- Bandeja local de entregas guardadas en el dispositivo -->
       <section *ngSwitchCase="'entregas'" class="secondary-view">
-        <div class="section-heading"><h2>Entregas guardadas en este dispositivo</h2><span class="task-count">{{ entregas.length }} pendientes</span></div>
+        <div class="section-heading">
+          <h2>Entregas guardadas en este dispositivo</h2>
+          <span class="task-count">{{ entregasPendientes.length }} pendientes</span>
+        </div>
+
         <article *ngFor="let entrega of entregas" class="saved-delivery">
           <span class="task-leading-icon" aria-hidden="true">↥</span>
-          <div class="delivery-copy"><span class="task-course">{{ entrega.curso }}</span><strong>{{ entrega.tituloTarea }}</strong><span>{{ entrega.comentario || entrega.archivoNombre || 'Sin comentario adjunto' }}</span></div>
-          <span class="pending-label">PENDIENTE</span>
+          <div class="delivery-copy">
+            <span class="task-course">{{ entrega.curso }}</span>
+            <strong>{{ entrega.tituloTarea }}</strong>
+            <span>{{ entrega.comentario || entrega.archivoNombre || 'Sin comentario adjunto' }}</span>
+            <small>{{ formatearFechaHora(entrega.fechaRegistro) }}</small>
+          </div>
+          <div class="delivery-actions">
+            <span
+              class="pending-label"
+              [class.success]="entrega.estadoSincronizacion === 'SINCRONIZADO'"
+              [class.error]="entrega.estadoSincronizacion === 'ERROR'"
+            >{{ entrega.estadoSincronizacion }}</span>
+            <button type="button" class="delete-button" (click)="eliminarEntrega(entrega.id ?? 0)" aria-label="Eliminar entrega">Eliminar</button>
+          </div>
         </article>
+
         <div *ngIf="entregas.length === 0" class="empty-state"><span class="empty-icon">↥</span><strong>Aún no tienes entregas pendientes</strong></div>
       </section>
 
+      <!-- Perfil del usuario actual -->
       <section *ngSwitchCase="'perfil'" class="secondary-view profile-panel">
-        <span class="large-avatar">{{ rol === 'estudiante' ? 'AL' : 'IN' }}</span><div><p class="eyebrow">PERFIL {{ rol === 'estudiante' ? 'DEL ESTUDIANTE' : 'DEL INSTRUCTOR' }}</p><h2>{{ rol === 'estudiante' ? 'Alex López' : 'Instructor SENATI' }}</h2><p>{{ rol === 'estudiante' ? 'Estudiante' : 'Instructor' }} · Campus Virtual SENATI</p></div>
+        <span class="large-avatar">{{ rol === 'estudiante' ? 'BV' : 'IN' }}</span><div><p class="eyebrow">PERFIL {{ rol === 'estudiante' ? 'DEL ESTUDIANTE' : 'DEL INSTRUCTOR' }}</p><h2>{{ rol === 'estudiante' ? 'Bryan Villanueva' : 'Bryan Villanueva' }}</h2><p>{{ rol === 'estudiante' ? 'Estudiante' : 'Instructor' }} · Campus Virtual SENATI</p></div>
       </section>
 
       <section *ngSwitchCase="'ajustes'" class="secondary-view settings-panel">
@@ -136,6 +184,7 @@
     </ng-container>
   </main>
 
+  <!-- Navegación inferior entre las diferentes vistas del sistema -->
   <nav class="bottom-nav" aria-label="Navegación principal">
     <button type="button" [class.active]="vistaActiva === 'tareas'" (click)="seleccionarVista('tareas')"><span aria-hidden="true">▤</span><small>Tareas</small></button>
     <button type="button" [class.active]="vistaActiva === 'entregas'" (click)="seleccionarVista('entregas')"><span aria-hidden="true">☑</span><small>Entregas</small><i *ngIf="entregas.length > 0">{{ entregas.length }}</i></button>
